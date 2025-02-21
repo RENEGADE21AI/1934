@@ -102,6 +102,19 @@ function update() {
       enemy.x += (player.x - enemy.x) * 0.02;
       enemy.y += enemy.speed;
     }
+
+    // Collision with player
+    if (checkCollision(enemy, player)) {
+      player.health--;
+      enemies.splice(index, 1);
+    }
+
+    // Avoid enemy overlap
+    enemies.forEach((otherEnemy) => {
+      if (enemy !== otherEnemy && checkCollision(enemy, otherEnemy)) {
+        enemy.x += enemy.speed;
+      }
+    });
   });
 
   // Enemy shooting
@@ -120,34 +133,6 @@ function update() {
       enemyBullets.splice(bIndex, 1);
     }
   });
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // Draw player
-  ctx.fillStyle = "blue";
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-
-  // Draw bullets
-  ctx.fillStyle = "white";
-  player.bullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
-
-  // Draw enemies
-  enemies.forEach(enemy => {
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-  });
-
-  // Draw enemy bullets
-  ctx.fillStyle = "red";
-  enemyBullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
-
-  // Draw player health bar
-  ctx.fillStyle = "black";
-  ctx.fillRect(10, canvas.height - 30, 120, 20);
-  ctx.fillStyle = "green";
-  ctx.fillRect(10, canvas.height - 30, player.health * 40, 20);
 }
 
 function gameLoop() {
