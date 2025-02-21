@@ -13,7 +13,7 @@ const player = {
   speed: 5,
   inertia: 0,
   bullets: [],
-  health: 3,
+  health: 5,
   lives: 3,
   fireRate: 10,
   lastShot: 0,
@@ -24,8 +24,10 @@ const player = {
 
 const enemies = [];
 const enemyBullets = [];
+const healthPacks = [];
 const keys = {};
 let enemySpawnTimer = 0;
+let gameOver = false;
 
 const enemyTypes = [
   { width: 50, height: 50, speed: 2, color: "green", shootChance: 0.007, pattern: "straight" },
@@ -48,7 +50,14 @@ function checkCollision(rect1, rect2) {
 }
 
 function update() {
-  // Player movement with inertia
+  if (gameOver) return;
+  
+  if (player.health <= 0) {
+    gameOver = true;
+    return;
+  }
+
+  // Player movement
   player.inertia *= 0.9;
   if (keys["ArrowLeft"]) player.inertia -= 0.5;
   if (keys["ArrowRight"]) player.inertia += 0.5;
@@ -64,74 +73,67 @@ function update() {
   }
   player.lastShot++;
 
-  // Update bullets
-  player.bullets.forEach((bullet, bIndex) => {
-    bullet.y -= bullet.speed;
-    if (bullet.y < 0) player.bullets.splice(bIndex, 1);
-    
-    enemies.forEach((enemy, eIndex) => {
-      if (checkCollision(bullet, enemy)) {
-        enemy.health--;
-        player.bullets.splice(bIndex, 1);
-        if (enemy.health <= 0) enemies.splice(eIndex, 1);
-      }
-    });
-  });
-
-  // Spawn enemy waves
+  // Spawn enemies
   if (enemySpawnTimer % 80 === 0) {
     let type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
     enemies.push({ x: Math.random() * (canvas.width - type.width), y: -type.height, ...type, health: type.health || 1 });
   }
   enemySpawnTimer++;
 
-  // Update enemies
+  // Update enemies and bullets
   enemies.forEach((enemy, index) => {
-    if (enemy.pattern === "straight") {
-      enemy.y += enemy.speed;
-    } else if (enemy.pattern === "zigzag") {
-      enemy.y += enemy.speed;
-      enemy.x += enemy.direction * 2;
-      if (enemy.x < 0 || enemy.x > canvas.width - enemy.width) enemy.direction *= -1;
-    } else if (enemy.pattern === "dive") {
-      if (enemy.y > canvas.height / 2) {
-        enemy.x += (player.x - enemy.x) * 0.02;
-      }
-      enemy.y += enemy.speed;
-    } else if (enemy.pattern === "follow") {
-      enemy.x += (player.x - enemy.x) * 0.02;
-      enemy.y += enemy.speed;
-    }
-
-    // Collision with player
+    enemy.y += enemy.speed;
+    
     if (checkCollision(enemy, player)) {
       player.health--;
       enemies.splice(index, 1);
     }
 
-    // Avoid enemy overlap
-    enemies.forEach((otherEnemy) => {
-      if (enemy !== otherEnemy && checkCollision(enemy, otherEnemy)) {
-        enemy.x += enemy.speed;
-      }
-    });
+    if (Math.random() < 0.05) {
+      healthPacks.push({ x: enemy.x, y: enemy.y, width: 20, height: 20, speed: 2 });
+    }
   });
 
-  // Enemy shooting
+  // Health packs
+  healthPacks.forEach((pack, pIndex) => {
+    pack.y += pack.speed;
+    if (checkCollision(pack, player)) {
+      player.health = Math.min(player.health + 1, 5);
+      healthPacks.splice(pIndex, 1);
+    }
+  });
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (gameOver) {
+    ctx.fillStyle = "red";
+    ctx.font = "40px Arial";
+    ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+    return;
+  }
+
+  // Draw player
+  ctx.fillStyle = "blue";
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+  
+  // Draw health bar
+  ctx.fillStyle = "black";
+  ctx.fillRect(10, canvas.height - 30, 110, 20);
+  ctx.fillStyle = "red";
+  ctx.fillRect(10, canvas.height - 30, player.health * 20, 20);
+  
+  // Draw enemies
   enemies.forEach((enemy) => {
-    if (Math.random() < enemy.shootChance) {
-      enemyBullets.push({ x: enemy.x + enemy.width / 2 - 2.5, y: enemy.y + enemy.height, width: 5, height: 10, speed: 5 });
-    }
+    ctx.fillStyle = enemy.color;
+    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
   });
 
-  // Update enemy bullets & check for collision with player
-  enemyBullets.forEach((bullet, bIndex) => {
-    bullet.y += bullet.speed;
-    if (bullet.y > canvas.height) enemyBullets.splice(bIndex, 1);
-    if (checkCollision(bullet, player)) {
-      player.health--;
-      enemyBullets.splice(bIndex, 1);
-    }
+  // Draw health packs
+  ctx.fillStyle = "green";
+  healthPacks.forEach((pack) => {
+    ctx.fillRect(pack.x, pack.y, pack.width, pack.height);
   });
 }
 
