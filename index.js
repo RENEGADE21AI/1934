@@ -38,6 +38,15 @@ const enemyTypes = [
 document.addEventListener("keydown", (e) => { keys[e.code] = true; });
 document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
+function checkCollision(rect1, rect2) {
+  return (
+    rect1.x < rect2.x + rect2.width &&
+    rect1.x + rect1.width > rect2.x &&
+    rect1.y < rect2.y + rect2.height &&
+    rect1.y + rect1.height > rect2.y
+  );
+}
+
 function update() {
   // Player movement with inertia
   player.inertia *= 0.9;
@@ -56,8 +65,18 @@ function update() {
   player.lastShot++;
 
   // Update bullets
-  player.bullets = player.bullets.filter(bullet => bullet.y > 0);
-  player.bullets.forEach(bullet => bullet.y -= bullet.speed);
+  player.bullets.forEach((bullet, bIndex) => {
+    bullet.y -= bullet.speed;
+    if (bullet.y < 0) player.bullets.splice(bIndex, 1);
+    
+    enemies.forEach((enemy, eIndex) => {
+      if (checkCollision(bullet, enemy)) {
+        enemy.health--;
+        player.bullets.splice(bIndex, 1);
+        if (enemy.health <= 0) enemies.splice(eIndex, 1);
+      }
+    });
+  });
 
   // Spawn enemy waves
   if (enemySpawnTimer % 80 === 0) {
@@ -83,8 +102,6 @@ function update() {
       enemy.x += (player.x - enemy.x) * 0.02;
       enemy.y += enemy.speed;
     }
-
-    if (enemy.y > canvas.height) enemies.splice(index, 1);
   });
 
   // Enemy shooting
@@ -94,9 +111,15 @@ function update() {
     }
   });
 
-  // Update enemy bullets
-  enemyBullets = enemyBullets.filter(bullet => bullet.y < canvas.height);
-  enemyBullets.forEach(bullet => bullet.y += bullet.speed);
+  // Update enemy bullets & check for collision with player
+  enemyBullets.forEach((bullet, bIndex) => {
+    bullet.y += bullet.speed;
+    if (bullet.y > canvas.height) enemyBullets.splice(bIndex, 1);
+    if (checkCollision(bullet, player)) {
+      player.health--;
+      enemyBullets.splice(bIndex, 1);
+    }
+  });
 }
 
 function draw() {
@@ -119,6 +142,12 @@ function draw() {
   // Draw enemy bullets
   ctx.fillStyle = "red";
   enemyBullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
+
+  // Draw player health bar
+  ctx.fillStyle = "black";
+  ctx.fillRect(10, canvas.height - 30, 120, 20);
+  ctx.fillStyle = "green";
+  ctx.fillRect(10, canvas.height - 30, player.health * 40, 20);
 }
 
 function gameLoop() {
