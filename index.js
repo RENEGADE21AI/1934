@@ -31,7 +31,7 @@ const enemyTypes = [
   { width: 50, height: 50, speed: 2, color: "green", shootChance: 0.007, pattern: "straight" },
   { width: 40, height: 40, speed: 3, color: "purple", shootChance: 0.012, pattern: "zigzag", direction: 1 },
   { width: 60, height: 60, speed: 1.5, color: "red", shootChance: 0.004, health: 3, pattern: "dive" },
-  { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.02, followsPlayer: true, pattern: "follow" }
+  { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.02, pattern: "follow" }
 ];
 
 // Listen for key presses
@@ -56,10 +56,8 @@ function update() {
   player.lastShot++;
 
   // Update bullets
-  player.bullets.forEach((bullet, index) => {
-    bullet.y -= bullet.speed;
-    if (bullet.y < 0) player.bullets.splice(index, 1);
-  });
+  player.bullets = player.bullets.filter(bullet => bullet.y > 0);
+  player.bullets.forEach(bullet => bullet.y -= bullet.speed);
 
   // Spawn enemy waves
   if (enemySpawnTimer % 80 === 0) {
@@ -97,10 +95,8 @@ function update() {
   });
 
   // Update enemy bullets
-  enemyBullets.forEach((bullet, index) => {
-    bullet.y += bullet.speed;
-    if (bullet.y > canvas.height) enemyBullets.splice(index, 1);
-  });
+  enemyBullets = enemyBullets.filter(bullet => bullet.y < canvas.height);
+  enemyBullets.forEach(bullet => bullet.y += bullet.speed);
 }
 
 function draw() {
