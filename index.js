@@ -28,10 +28,10 @@ const keys = {};
 let enemySpawnTimer = 0;
 
 const enemyTypes = [
-  { width: 50, height: 50, speed: 2, color: "green", shootChance: 0.007 },
-  { width: 40, height: 40, speed: 3, color: "purple", shootChance: 0.012 },
-  { width: 60, height: 60, speed: 1.5, color: "red", shootChance: 0.004, health: 3 },
-  { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.02, followsPlayer: true }
+  { width: 50, height: 50, speed: 2, color: "green", shootChance: 0.007, pattern: "straight" },
+  { width: 40, height: 40, speed: 3, color: "purple", shootChance: 0.012, pattern: "zigzag", direction: 1 },
+  { width: 60, height: 60, speed: 1.5, color: "red", shootChance: 0.004, health: 3, pattern: "dive" },
+  { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.02, followsPlayer: true, pattern: "follow" }
 ];
 
 // Listen for key presses
@@ -70,10 +70,22 @@ function update() {
 
   // Update enemies
   enemies.forEach((enemy, index) => {
-    enemy.y += enemy.speed;
-    if (enemy.followsPlayer) {
-      enemy.x += (player.x - enemy.x) * 0.01;
+    if (enemy.pattern === "straight") {
+      enemy.y += enemy.speed;
+    } else if (enemy.pattern === "zigzag") {
+      enemy.y += enemy.speed;
+      enemy.x += enemy.direction * 2;
+      if (enemy.x < 0 || enemy.x > canvas.width - enemy.width) enemy.direction *= -1;
+    } else if (enemy.pattern === "dive") {
+      if (enemy.y > canvas.height / 2) {
+        enemy.x += (player.x - enemy.x) * 0.02;
+      }
+      enemy.y += enemy.speed;
+    } else if (enemy.pattern === "follow") {
+      enemy.x += (player.x - enemy.x) * 0.02;
+      enemy.y += enemy.speed;
     }
+
     if (enemy.y > canvas.height) enemies.splice(index, 1);
   });
 
