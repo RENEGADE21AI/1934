@@ -13,7 +13,7 @@ const player = {
   speed: 5,
   inertia: 0,
   bullets: [],
-  health: 10,
+  health: 15,
   lives: 3,
   fireRate: 10,
   lastShot: 0,
@@ -41,7 +41,7 @@ document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 function checkCollision(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
-    rect1.x + rect2.width > rect2.x &&
+    rect1.x + rect1.width > rect2.x &&
     rect1.y < rect2.y + rect2.height &&
     rect1.y + rect1.height > rect2.y
   );
@@ -76,12 +76,13 @@ function update() {
     if (bullet.y < 0) player.bullets.splice(index, 1);
   });
 
-  // Spawn enemies in waves with patterns
-  if (enemySpawnTimer % 100 === 0) {
-    const typeIndex = enemySpawnTimer % enemyTypes.length;
+  // Spawn enemies in varied waves
+  if (enemySpawnTimer % 150 === 0) {
+    let typeIndex = Math.floor(Math.random() * enemyTypes.length);
     let type = enemyTypes[typeIndex];
-    for (let i = 0; i < 5; i++) {
-      enemies.push({ x: 100 + i * 100, y: -type.height, ...type, health: type.health || 1 });
+    let waveSize = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < waveSize; i++) {
+      enemies.push({ x: 50 + i * 150, y: -type.height, ...type, health: type.health || 1 });
     }
   }
   enemySpawnTimer++;
@@ -106,17 +107,6 @@ function update() {
     if (Math.random() < enemy.shootChance) {
       let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
       enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speed: 4, angle: angle });
-    }
-  });
-
-  // Enemy bullets movement
-  enemyBullets.forEach((bullet, index) => {
-    bullet.x += Math.cos(bullet.angle) * bullet.speed;
-    bullet.y += Math.sin(bullet.angle) * bullet.speed;
-    if (bullet.y > canvas.height || bullet.x < 0 || bullet.x > canvas.width) enemyBullets.splice(index, 1);
-    if (checkCollision(bullet, player)) {
-      player.health--;
-      enemyBullets.splice(index, 1);
     }
   });
 }
