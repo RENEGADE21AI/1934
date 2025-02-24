@@ -104,14 +104,16 @@ function update() {
     }
 
     if (Math.random() < enemy.shootChance) {
-      enemyBullets.push({ x: enemy.x + enemy.width / 2 - 2.5, y: enemy.y + enemy.height, width: 5, height: 10, speed: 4 });
+      let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speed: 4, angle: angle });
     }
   });
 
   // Enemy bullets movement
   enemyBullets.forEach((bullet, index) => {
-    bullet.y += bullet.speed;
-    if (bullet.y > canvas.height) enemyBullets.splice(index, 1);
+    bullet.x += Math.cos(bullet.angle) * bullet.speed;
+    bullet.y += Math.sin(bullet.angle) * bullet.speed;
+    if (bullet.y > canvas.height || bullet.x < 0 || bullet.x > canvas.width) enemyBullets.splice(index, 1);
     if (checkCollision(bullet, player)) {
       player.health--;
       enemyBullets.splice(index, 1);
@@ -135,6 +137,13 @@ function draw() {
   ctx.fillStyle = "yellow";
   player.bullets.forEach((bullet) => {
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
+
+  ctx.fillStyle = "red";
+  enemyBullets.forEach((bullet) => {
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+    ctx.fill();
   });
 
   enemies.forEach((enemy) => {
