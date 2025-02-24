@@ -13,7 +13,7 @@ const player = {
   speed: 5,
   inertia: 0,
   bullets: [],
-  health: 5,
+  health: 10,
   lives: 3,
   fireRate: 10,
   lastShot: 0,
@@ -41,7 +41,7 @@ document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 function checkCollision(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
-    rect1.x + rect1.width > rect2.x &&
+    rect1.x + rect2.width > rect2.x &&
     rect1.y < rect2.y + rect2.height &&
     rect1.y + rect1.height > rect2.y
   );
@@ -76,23 +76,33 @@ function update() {
     if (bullet.y < 0) player.bullets.splice(index, 1);
   });
 
-  // Spawn enemies in waves
-  if (enemySpawnTimer % 80 === 0) {
-    let type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
-    enemies.push({ x: Math.random() * (canvas.width - type.width), y: -type.height, ...type, health: type.health || 1 });
+  // Spawn enemies in waves with patterns
+  if (enemySpawnTimer % 100 === 0) {
+    const typeIndex = enemySpawnTimer % enemyTypes.length;
+    let type = enemyTypes[typeIndex];
+    for (let i = 0; i < 5; i++) {
+      enemies.push({ x: 100 + i * 100, y: -type.height, ...type, health: type.health || 1 });
+    }
   }
   enemySpawnTimer++;
 
   // Update enemies
   enemies.forEach((enemy, index) => {
+    if (enemy.pattern === "zigzag") {
+      enemy.x += enemy.direction * 2;
+      if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) enemy.direction *= -1;
+    }
+    if (enemy.pattern === "follow") {
+      if (enemy.x < player.x) enemy.x += 1;
+      else if (enemy.x > player.x) enemy.x -= 1;
+    }
     enemy.y += enemy.speed;
     
     if (checkCollision(enemy, player)) {
-      player.health--;
+      player.health -= 2;
       enemies.splice(index, 1);
     }
 
-    // Enemy shooting
     if (Math.random() < enemy.shootChance) {
       enemyBullets.push({ x: enemy.x + enemy.width / 2 - 2.5, y: enemy.y + enemy.height, width: 5, height: 10, speed: 4 });
     }
@@ -107,31 +117,6 @@ function update() {
       enemyBullets.splice(index, 1);
     }
   });
-
-  // Player bullets and enemy interaction
-  player.bullets.forEach((bullet, bIndex) => {
-    enemies.forEach((enemy, eIndex) => {
-      if (checkCollision(bullet, enemy)) {
-        enemy.health--;
-        player.bullets.splice(bIndex, 1);
-        if (enemy.health <= 0) {
-          if (enemy.color === "red" && enemies.filter(e => e.color === "red").length === 1) {
-            healthPacks.push({ x: enemy.x, y: enemy.y, width: 20, height: 20, speed: 2 });
-          }
-          enemies.splice(eIndex, 1);
-        }
-      }
-    });
-  });
-
-  // Health packs
-  healthPacks.forEach((pack, pIndex) => {
-    pack.y += pack.speed;
-    if (checkCollision(pack, player)) {
-      player.health = Math.min(player.health + 1, 5);
-      healthPacks.splice(pIndex, 1);
-    }
-  });
 }
 
 function draw() {
@@ -144,26 +129,17 @@ function draw() {
     return;
   }
 
-  // Draw player
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x, player.y, player.width, player.height);
   
-  // Draw bullets
   ctx.fillStyle = "yellow";
   player.bullets.forEach((bullet) => {
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
 
-  // Draw enemies
   enemies.forEach((enemy) => {
     ctx.fillStyle = enemy.color;
     ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-  });
-
-  // Draw enemy bullets
-  ctx.fillStyle = "red";
-  enemyBullets.forEach((bullet) => {
-    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
 }
 
