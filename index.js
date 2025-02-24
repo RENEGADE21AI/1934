@@ -17,8 +17,6 @@ const player = {
   lives: 3,
   fireRate: 10,
   lastShot: 0,
-  invincible: false,
-  invincibleTimer: 0,
   bombCount: 3
 };
 
@@ -73,14 +71,19 @@ function update() {
   }
   player.lastShot++;
 
-  // Spawn enemies
+  player.bullets.forEach((bullet, index) => {
+    bullet.y -= bullet.speed;
+    if (bullet.y < 0) player.bullets.splice(index, 1);
+  });
+
+  // Spawn enemies in waves
   if (enemySpawnTimer % 80 === 0) {
     let type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
     enemies.push({ x: Math.random() * (canvas.width - type.width), y: -type.height, ...type, health: type.health || 1 });
   }
   enemySpawnTimer++;
 
-  // Update enemies and bullets
+  // Update enemies
   enemies.forEach((enemy, index) => {
     enemy.y += enemy.speed;
     
@@ -89,9 +92,36 @@ function update() {
       enemies.splice(index, 1);
     }
 
-    if (Math.random() < 0.05) {
-      healthPacks.push({ x: enemy.x, y: enemy.y, width: 20, height: 20, speed: 2 });
+    // Enemy shooting
+    if (Math.random() < enemy.shootChance) {
+      enemyBullets.push({ x: enemy.x + enemy.width / 2 - 2.5, y: enemy.y + enemy.height, width: 5, height: 10, speed: 4 });
     }
+  });
+
+  // Enemy bullets movement
+  enemyBullets.forEach((bullet, index) => {
+    bullet.y += bullet.speed;
+    if (bullet.y > canvas.height) enemyBullets.splice(index, 1);
+    if (checkCollision(bullet, player)) {
+      player.health--;
+      enemyBullets.splice(index, 1);
+    }
+  });
+
+  // Player bullets and enemy interaction
+  player.bullets.forEach((bullet, bIndex) => {
+    enemies.forEach((enemy, eIndex) => {
+      if (checkCollision(bullet, enemy)) {
+        enemy.health--;
+        player.bullets.splice(bIndex, 1);
+        if (enemy.health <= 0) {
+          if (enemy.color === "red" && enemies.filter(e => e.color === "red").length === 1) {
+            healthPacks.push({ x: enemy.x, y: enemy.y, width: 20, height: 20, speed: 2 });
+          }
+          enemies.splice(eIndex, 1);
+        }
+      }
+    });
   });
 
   // Health packs
@@ -118,22 +148,22 @@ function draw() {
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x, player.y, player.width, player.height);
   
-  // Draw health bar
-  ctx.fillStyle = "black";
-  ctx.fillRect(10, canvas.height - 30, 110, 20);
-  ctx.fillStyle = "red";
-  ctx.fillRect(10, canvas.height - 30, player.health * 20, 20);
-  
+  // Draw bullets
+  ctx.fillStyle = "yellow";
+  player.bullets.forEach((bullet) => {
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
+
   // Draw enemies
   enemies.forEach((enemy) => {
     ctx.fillStyle = enemy.color;
     ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
   });
 
-  // Draw health packs
-  ctx.fillStyle = "green";
-  healthPacks.forEach((pack) => {
-    ctx.fillRect(pack.x, pack.y, pack.width, pack.height);
+  // Draw enemy bullets
+  ctx.fillStyle = "red";
+  enemyBullets.forEach((bullet) => {
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
 }
 
