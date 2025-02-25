@@ -109,6 +109,16 @@ function update() {
       enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speed: 4, angle: angle });
     }
   });
+
+  enemyBullets.forEach((bullet, index) => {
+    bullet.x += Math.cos(bullet.angle) * bullet.speed;
+    bullet.y += Math.sin(bullet.angle) * bullet.speed;
+    if (bullet.y > canvas.height) enemyBullets.splice(index, 1);
+    if (checkCollision(bullet, player)) {
+      player.health -= 1;
+      enemyBullets.splice(index, 1);
+    }
+  });
 }
 
 function draw() {
