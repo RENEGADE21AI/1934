@@ -130,3 +130,27 @@ function update() {
     }
   });
 }
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "blue";
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+  
+  ctx.fillStyle = "red";
+  enemies.forEach((enemy) => {
+    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+  });
+  
+  ctx.fillStyle = "yellow";
+  player.bullets.forEach((bullet) => {
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
