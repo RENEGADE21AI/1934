@@ -130,6 +130,37 @@ function update() {
   });
 }
 
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (gameOver) {
+    ctx.fillStyle = "red";
+    ctx.font = "40px Arial";
+    ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+    return;
+  }
+
+  ctx.fillStyle = "blue";
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+  
+  ctx.fillStyle = "yellow";
+  player.bullets.forEach((bullet) => {
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
+
+  ctx.fillStyle = "red";
+  enemyBullets.forEach((bullet) => {
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  enemies.forEach((enemy) => {
+    ctx.fillStyle = enemy.color;
+    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+  });
+}
+
 function gameLoop() {
   update();
   draw();
