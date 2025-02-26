@@ -30,11 +30,11 @@ let enemySpawnTimer = 0;
 let gameOver = false;
 
 const enemyTypes = [
-  { width: 50, height: 50, speed: 2, color: "green", shootChance: 0.007, pattern: "straight", health: 1 },
-  { width: 40, height: 40, speed: 3, color: "purple", shootChance: 0.012, pattern: "zigzag", direction: 1, health: 1 },
-  { width: 60, height: 60, speed: 1.5, color: "red", shootChance: 0.004, pattern: "dive", health: 3 },
-  { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.02, pattern: "follow", health: 2 },
-  { width: 80, height: 80, speed: 1, color: "gray", shootChance: 0.03, pattern: "boss", health: 10 }
+  { width: 50, height: 50, speed: 2, color: "green", shootChance: 0.005, pattern: "straight", health: 1 },
+  { width: 40, height: 40, speed: 3, color: "purple", shootChance: 0.008, pattern: "zigzag", direction: 1, health: 1 },
+  { width: 60, height: 60, speed: 1.5, color: "red", shootChance: 0.003, pattern: "dive", health: 3 },
+  { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.015, pattern: "follow", health: 2 },
+  { width: 80, height: 80, speed: 1, color: "gray", shootChance: 0.02, pattern: "boss", health: 10 }
 ];
 
 const powerUpTypes = [
@@ -57,11 +57,6 @@ function spawnEnemyWave() {
   }
 }
 
-function spawnPowerUp(x, y) {
-  let type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-  powerUps.push({ x, y, ...type });
-}
-
 function checkCollision(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
@@ -79,7 +74,6 @@ function update() {
     return;
   }
 
-  // Player movement
   player.inertia *= 0.9;
   if (keys["ArrowLeft"]) player.inertia -= 0.5;
   if (keys["ArrowRight"]) player.inertia += 0.5;
@@ -88,7 +82,6 @@ function update() {
   if (keys["ArrowUp"] && player.y > 0) player.y -= player.speed;
   if (keys["ArrowDown"] && player.y < canvas.height - player.height) player.y += player.speed;
 
-  // Shooting bullets
   if (keys["Space"] && player.lastShot >= player.fireRate) {
     let bulletPattern = [{ x: 0, y: -7 }];
     if (player.powerUps.weapon === "spread") {
@@ -124,7 +117,7 @@ function update() {
     enemy.y += enemy.speed;
     if (Math.random() < enemy.shootChance) {
       let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speedX: Math.cos(angle) * 4, speedY: Math.sin(angle) * 4, width: 5, height: 5 });
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speedX: Math.cos(angle) * 3, speedY: Math.sin(angle) * 3, width: 8, height: 8 });
     }
   });
 
@@ -137,22 +130,3 @@ function update() {
     }
   });
 }
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "blue";
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-  ctx.fillStyle = "yellow";
-  player.bullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
-  enemies.forEach(enemy => { ctx.fillStyle = enemy.color; ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height); });
-  ctx.fillStyle = "red";
-  enemyBullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
-}
-
-function gameLoop() {
-  update();
-  draw();
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
