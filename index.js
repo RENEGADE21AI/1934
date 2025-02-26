@@ -104,7 +104,15 @@ function update() {
   player.bullets.forEach((bullet, index) => {
     bullet.y += bullet.speedY;
     bullet.x += bullet.speedX;
-    if (bullet.y < 0) player.bullets.splice(index, 1);
+    enemies.forEach((enemy, enemyIndex) => {
+      if (checkCollision(bullet, enemy)) {
+        enemy.health--;
+        player.bullets.splice(index, 1);
+        if (enemy.health <= 0) {
+          enemies.splice(enemyIndex, 1);
+        }
+      }
+    });
   });
 
   if (enemySpawnTimer % 150 === 0) {
@@ -113,30 +121,32 @@ function update() {
   enemySpawnTimer++;
 
   enemies.forEach((enemy) => {
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
     enemy.y += enemy.speed;
+    if (Math.random() < enemy.shootChance) {
+      let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speedX: Math.cos(angle) * 4, speedY: Math.sin(angle) * 4, width: 5, height: 5 });
+    }
+  });
+
+  enemyBullets.forEach((bullet, index) => {
+    bullet.x += bullet.speedX;
+    bullet.y += bullet.speedY;
+    if (checkCollision(bullet, player)) {
+      player.health -= 1;
+      enemyBullets.splice(index, 1);
+    }
   });
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw player
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x, player.y, player.width, player.height);
-
-  // Draw bullets
   ctx.fillStyle = "yellow";
-  player.bullets.forEach(bullet => {
-    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-  });
-
-  // Draw enemies
-  enemies.forEach((enemy) => {
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-  });
+  player.bullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
+  enemies.forEach(enemy => { ctx.fillStyle = enemy.color; ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height); });
+  ctx.fillStyle = "red";
+  enemyBullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
 }
 
 function gameLoop() {
