@@ -48,6 +48,15 @@ const powerUpTypes = [
 document.addEventListener("keydown", (e) => { keys[e.code] = true; });
 document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
+function spawnEnemyWave() {
+  let typeIndex = Math.floor(Math.random() * enemyTypes.length);
+  let type = enemyTypes[typeIndex];
+  let waveSize = 3 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < waveSize; i++) {
+    enemies.push({ x: 50 + i * 150, y: -type.height, ...type, health: type.health || 1 });
+  }
+}
+
 function spawnPowerUp(x, y) {
   let type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
   powerUps.push({ x, y, ...type });
@@ -97,6 +106,17 @@ function update() {
     bullet.x += bullet.speedX;
     if (bullet.y < 0) player.bullets.splice(index, 1);
   });
+
+  if (enemySpawnTimer % 150 === 0) {
+    spawnEnemyWave();
+  }
+  enemySpawnTimer++;
+
+  enemies.forEach((enemy) => {
+    ctx.fillStyle = enemy.color;
+    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+    enemy.y += enemy.speed;
+  });
 }
 
 function draw() {
@@ -110,6 +130,12 @@ function draw() {
   ctx.fillStyle = "yellow";
   player.bullets.forEach(bullet => {
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
+
+  // Draw enemies
+  enemies.forEach((enemy) => {
+    ctx.fillStyle = enemy.color;
+    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
   });
 }
 
