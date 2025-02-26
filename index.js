@@ -96,39 +96,21 @@ function update() {
     bullet.y += bullet.speedY;
     bullet.x += bullet.speedX;
     if (bullet.y < 0) player.bullets.splice(index, 1);
-    
-    enemies.forEach((enemy, enemyIndex) => {
-      if (checkCollision(bullet, enemy)) {
-        enemy.health -= 1;
-        if (enemy.health <= 0) {
-          enemies.splice(enemyIndex, 1);
-          if (Math.random() < 0.2) spawnPowerUp(enemy.x, enemy.y);
-        }
-        player.bullets.splice(index, 1);
-      }
-    });
-  });
-
-  powerUps.forEach((powerUp, index) => {
-    powerUp.y += 1;
-    if (checkCollision(player, powerUp)) {
-      if (powerUp.type === "weapon") {
-        player.powerUps.weapon = powerUp.effect;
-        player.powerUps.duration = powerUp.duration;
-      } else if (powerUp.type === "health") {
-        player.health += powerUp.effect;
-      } else if (powerUp.type === "invincibility") {
-        player.invincible = powerUp.duration;
-      }
-      powerUps.splice(index, 1);
-    }
   });
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw player
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  // Draw bullets
+  ctx.fillStyle = "yellow";
+  player.bullets.forEach(bullet => {
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
 }
 
 function gameLoop() {
