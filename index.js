@@ -17,12 +17,14 @@ const player = {
   lives: 3,
   fireRate: 10,
   lastShot: 0,
-  bombCount: 3
+  bombCount: 3,
+  powerUps: { weapon: "default", duration: 0 }
 };
 
 const enemies = [];
 const enemyBullets = [];
 const healthPacks = [];
+const powerUps = [];
 const keys = {};
 let enemySpawnTimer = 0;
 let gameOver = false;
@@ -35,9 +37,21 @@ const enemyTypes = [
   { width: 80, height: 80, speed: 1, color: "gray", shootChance: 0.03, pattern: "boss", health: 10 }
 ];
 
+const powerUpTypes = [
+  { type: "weapon", effect: "spread", duration: 500 },
+  { type: "weapon", effect: "laser", duration: 500 },
+  { type: "health", effect: 5 },
+  { type: "invincibility", duration: 300 }
+];
+
 // Listen for key presses
 document.addEventListener("keydown", (e) => { keys[e.code] = true; });
 document.addEventListener("keyup", (e) => { keys[e.code] = false; });
+
+function spawnPowerUp(x, y) {
+  let type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+  powerUps.push({ x, y, ...type });
+}
 
 function checkCollision(rect1, rect2) {
   return (
@@ -67,65 +81,46 @@ function update() {
 
   // Shooting bullets
   if (keys["Space"] && player.lastShot >= player.fireRate) {
-    player.bullets.push({ x: player.x + player.width / 2 - 2.5, y: player.y, width: 5, height: 10, speed: 7 });
+    let bulletPattern = [{ x: 0, y: -7 }];
+    if (player.powerUps.weapon === "spread") {
+      bulletPattern = [{ x: -2, y: -7 }, { x: 0, y: -7 }, { x: 2, y: -7 }];
+    }
+    bulletPattern.forEach(offset => {
+      player.bullets.push({ x: player.x + player.width / 2 - 2.5, y: player.y, width: 5, height: 10, speedX: offset.x, speedY: offset.y });
+    });
     player.lastShot = 0;
   }
   player.lastShot++;
 
   player.bullets.forEach((bullet, index) => {
-    bullet.y -= bullet.speed;
+    bullet.y += bullet.speedY;
+    bullet.x += bullet.speedX;
     if (bullet.y < 0) player.bullets.splice(index, 1);
     
     enemies.forEach((enemy, enemyIndex) => {
       if (checkCollision(bullet, enemy)) {
         enemy.health -= 1;
-        if (enemy.health <= 0) enemies.splice(enemyIndex, 1);
+        if (enemy.health <= 0) {
+          enemies.splice(enemyIndex, 1);
+          if (Math.random() < 0.2) spawnPowerUp(enemy.x, enemy.y);
+        }
         player.bullets.splice(index, 1);
       }
     });
   });
 
-  // Spawn enemies in varied waves
-  if (enemySpawnTimer % 150 === 0) {
-    let typeIndex = Math.floor(Math.random() * enemyTypes.length);
-    let type = enemyTypes[typeIndex];
-    let waveSize = 3 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < waveSize; i++) {
-      enemies.push({ x: 50 + i * 150, y: -type.height, ...type });
-    }
-  }
-  enemySpawnTimer++;
-
-  // Update enemies
-  enemies.forEach((enemy, index) => {
-    if (enemy.pattern === "zigzag") {
-      enemy.x += enemy.direction * 2;
-      if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) enemy.direction *= -1;
-    }
-    if (enemy.pattern === "follow") {
-      if (enemy.x < player.x) enemy.x += 1;
-      else if (enemy.x > player.x) enemy.x -= 1;
-    }
-    enemy.y += enemy.speed;
-    
-    if (checkCollision(enemy, player)) {
-      player.health -= 2;
-      enemies.splice(index, 1);
-    }
-
-    if (Math.random() < enemy.shootChance) {
-      let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speed: 4, angle: angle, width: 5, height: 5 });
-    }
-  });
-
-  enemyBullets.forEach((bullet, index) => {
-    bullet.x += Math.cos(bullet.angle) * bullet.speed;
-    bullet.y += Math.sin(bullet.angle) * bullet.speed;
-    if (bullet.y > canvas.height) enemyBullets.splice(index, 1);
-    if (checkCollision(bullet, player)) {
-      player.health -= 1;
-      enemyBullets.splice(index, 1);
+  powerUps.forEach((powerUp, index) => {
+    powerUp.y += 1;
+    if (checkCollision(player, powerUp)) {
+      if (powerUp.type === "weapon") {
+        player.powerUps.weapon = powerUp.effect;
+        player.powerUps.duration = powerUp.duration;
+      } else if (powerUp.type === "health") {
+        player.health += powerUp.effect;
+      } else if (powerUp.type === "invincibility") {
+        player.invincible = powerUp.duration;
+      }
+      powerUps.splice(index, 1);
     }
   });
 }
