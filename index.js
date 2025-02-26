@@ -115,7 +115,7 @@ function update() {
 
     if (Math.random() < enemy.shootChance) {
       let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speed: 4, angle: angle });
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speed: 4, angle: angle, width: 5, height: 5 });
     }
   });
 
@@ -128,43 +128,6 @@ function update() {
       enemyBullets.splice(index, 1);
     }
   });
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  if (gameOver) {
-    ctx.fillStyle = "red";
-    ctx.font = "40px Arial";
-    ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
-    return;
-  }
-
-  ctx.fillStyle = "blue";
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-  
-  ctx.fillStyle = "yellow";
-  player.bullets.forEach((bullet) => {
-    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-  });
-
-  ctx.fillStyle = "red";
-  enemyBullets.forEach((bullet) => {
-    ctx.beginPath();
-    ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  enemies.forEach((enemy) => {
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-  });
-}
-
-function gameLoop() {
-  update();
-  draw();
-  requestAnimationFrame(gameLoop);
 }
 
 gameLoop();
