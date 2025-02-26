@@ -28,10 +28,11 @@ let enemySpawnTimer = 0;
 let gameOver = false;
 
 const enemyTypes = [
-  { width: 50, height: 50, speed: 2, color: "green", shootChance: 0.007, pattern: "straight" },
-  { width: 40, height: 40, speed: 3, color: "purple", shootChance: 0.012, pattern: "zigzag", direction: 1 },
-  { width: 60, height: 60, speed: 1.5, color: "red", shootChance: 0.004, health: 3, pattern: "dive" },
-  { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.02, pattern: "follow" }
+  { width: 50, height: 50, speed: 2, color: "green", shootChance: 0.007, pattern: "straight", health: 1 },
+  { width: 40, height: 40, speed: 3, color: "purple", shootChance: 0.012, pattern: "zigzag", direction: 1, health: 1 },
+  { width: 60, height: 60, speed: 1.5, color: "red", shootChance: 0.004, pattern: "dive", health: 3 },
+  { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.02, pattern: "follow", health: 2 },
+  { width: 80, height: 80, speed: 1, color: "gray", shootChance: 0.03, pattern: "boss", health: 10 }
 ];
 
 // Listen for key presses
@@ -82,7 +83,7 @@ function update() {
     let type = enemyTypes[typeIndex];
     let waveSize = 3 + Math.floor(Math.random() * 3);
     for (let i = 0; i < waveSize; i++) {
-      enemies.push({ x: 50 + i * 150, y: -type.height, ...type, health: type.health || 1 });
+      enemies.push({ x: 50 + i * 150, y: -type.height, ...type });
     }
   }
   enemySpawnTimer++;
