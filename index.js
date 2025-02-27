@@ -95,7 +95,7 @@ function update() {
     enemy.y += enemy.speed;
     if (Math.random() < enemy.shootChance) {
       let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 5, speedX: Math.cos(angle) * 3, speedY: Math.sin(angle) * 3 });
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 7, speedX: Math.cos(angle) * 2, speedY: Math.sin(angle) * 2, color: "red" });
     }
   });
 
@@ -136,8 +136,8 @@ function draw() {
     ctx.fill();
   });
 
-  ctx.fillStyle = "red";
   enemyBullets.forEach((bullet) => {
+    ctx.fillStyle = bullet.color;
     ctx.beginPath();
     ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
     ctx.fill();
