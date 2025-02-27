@@ -17,14 +17,11 @@ const player = {
   lives: 3,
   fireRate: 10,
   lastShot: 0,
-  bombCount: 3,
-  powerUps: { weapon: "default", duration: 0 }
+  bombCount: 3
 };
 
 const enemies = [];
 const enemyBullets = [];
-const healthPacks = [];
-const powerUps = [];
 const keys = {};
 let enemySpawnTimer = 0;
 let gameOver = false;
@@ -36,6 +33,9 @@ const enemyTypes = [
   { width: 50, height: 50, speed: 2.5, color: "orange", shootChance: 0.015, pattern: "follow", health: 2 },
   { width: 80, height: 80, speed: 1, color: "gray", shootChance: 0.02, pattern: "boss", health: 10 }
 ];
+
+document.addEventListener("keydown", (e) => { keys[e.code] = true; });
+document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
 function checkCollision(rect1, rect2) {
   return (
@@ -70,15 +70,7 @@ function update() {
 
   player.bullets.forEach((bullet, index) => {
     bullet.y += bullet.speedY;
-    enemies.forEach((enemy, enemyIndex) => {
-      if (checkCollision({ x: bullet.x - bullet.radius, y: bullet.y - bullet.radius, width: bullet.radius * 2, height: bullet.radius * 2 }, enemy)) {
-        enemy.health--;
-        player.bullets.splice(index, 1);
-        if (enemy.health <= 0) {
-          enemies.splice(enemyIndex, 1);
-        }
-      }
-    });
+    if (bullet.y < 0) player.bullets.splice(index, 1);
   });
 
   enemySpawnTimer++;
