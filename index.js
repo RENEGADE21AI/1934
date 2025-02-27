@@ -108,21 +108,19 @@ function update() {
     });
   });
 
+  enemySpawnTimer++;
   if (enemySpawnTimer % 150 === 0) {
     spawnEnemyWave();
   }
-  enemySpawnTimer++;
 
   enemies.forEach((enemy) => {
     enemy.y += enemy.speed;
     if (Math.random() < enemy.shootChance) {
-      let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, speedX: Math.cos(angle) * 3, speedY: Math.sin(angle) * 3, width: 8, height: 8 });
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, width: 8, height: 8, speedX: 0, speedY: 3 });
     }
   });
 
   enemyBullets.forEach((bullet, index) => {
-    bullet.x += bullet.speedX;
     bullet.y += bullet.speedY;
     if (checkCollision(bullet, player)) {
       player.health -= 1;
@@ -145,6 +143,17 @@ function draw() {
   player.bullets.forEach((bullet) => {
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
+
+  ctx.fillStyle = "white";
+  enemyBullets.forEach((bullet) => {
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
+
+  if (gameOver) {
+    ctx.fillStyle = "white";
+    ctx.font = "30px Arial";
+    ctx.fillText("GAME OVER", canvas.width / 2 - 80, canvas.height / 2);
+  }
 }
 
 function gameLoop() {
