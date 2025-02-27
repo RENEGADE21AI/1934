@@ -37,26 +37,6 @@ const enemyTypes = [
   { width: 80, height: 80, speed: 1, color: "gray", shootChance: 0.02, pattern: "boss", health: 10 }
 ];
 
-const powerUpTypes = [
-  { type: "weapon", effect: "spread", duration: 500 },
-  { type: "weapon", effect: "laser", duration: 500 },
-  { type: "health", effect: 5 },
-  { type: "invincibility", duration: 300 }
-];
-
-// Listen for key presses
-document.addEventListener("keydown", (e) => { keys[e.code] = true; });
-document.addEventListener("keyup", (e) => { keys[e.code] = false; });
-
-function spawnEnemyWave() {
-  let typeIndex = Math.floor(Math.random() * enemyTypes.length);
-  let type = enemyTypes[typeIndex];
-  let waveSize = 3 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < waveSize; i++) {
-    enemies.push({ x: 50 + i * 150, y: -type.height, ...type, health: type.health || 1 });
-  }
-}
-
 function checkCollision(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
@@ -83,22 +63,15 @@ function update() {
   if (keys["ArrowDown"] && player.y < canvas.height - player.height) player.y += player.speed;
 
   if (keys["Space"] && player.lastShot >= player.fireRate) {
-    let bulletPattern = [{ x: 0, y: -7 }];
-    if (player.powerUps.weapon === "spread") {
-      bulletPattern = [{ x: -2, y: -7 }, { x: 0, y: -7 }, { x: 2, y: -7 }];
-    }
-    bulletPattern.forEach(offset => {
-      player.bullets.push({ x: player.x + player.width / 2 - 2.5, y: player.y, width: 5, height: 10, speedX: offset.x, speedY: offset.y });
-    });
+    player.bullets.push({ x: player.x + player.width / 2, y: player.y, radius: 5, speedY: -7 });
     player.lastShot = 0;
   }
   player.lastShot++;
 
   player.bullets.forEach((bullet, index) => {
     bullet.y += bullet.speedY;
-    bullet.x += bullet.speedX;
     enemies.forEach((enemy, enemyIndex) => {
-      if (checkCollision(bullet, enemy)) {
+      if (checkCollision({ x: bullet.x - bullet.radius, y: bullet.y - bullet.radius, width: bullet.radius * 2, height: bullet.radius * 2 }, enemy)) {
         enemy.health--;
         player.bullets.splice(index, 1);
         if (enemy.health <= 0) {
@@ -110,19 +83,26 @@ function update() {
 
   enemySpawnTimer++;
   if (enemySpawnTimer % 150 === 0) {
-    spawnEnemyWave();
+    let typeIndex = Math.floor(Math.random() * enemyTypes.length);
+    let type = enemyTypes[typeIndex];
+    let waveSize = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < waveSize; i++) {
+      enemies.push({ x: 50 + i * 150, y: -type.height, ...type, health: type.health || 1 });
+    }
   }
 
   enemies.forEach((enemy) => {
     enemy.y += enemy.speed;
     if (Math.random() < enemy.shootChance) {
-      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, width: 8, height: 8, speedX: 0, speedY: 3 });
+      let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 5, speedX: Math.cos(angle) * 3, speedY: Math.sin(angle) * 3 });
     }
   });
 
   enemyBullets.forEach((bullet, index) => {
+    bullet.x += bullet.speedX;
     bullet.y += bullet.speedY;
-    if (checkCollision(bullet, player)) {
+    if (checkCollision({ x: bullet.x - bullet.radius, y: bullet.y - bullet.radius, width: bullet.radius * 2, height: bullet.radius * 2 }, player)) {
       player.health -= 1;
       enemyBullets.splice(index, 1);
     }
@@ -131,29 +111,37 @@ function update() {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (gameOver) {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "red";
+    ctx.font = "40px Arial";
+    ctx.fillText("GAME OVER", canvas.width / 2 - 100, canvas.height / 2);
+    return;
+  }
+
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x, player.y, player.width, player.height);
-  
+
   ctx.fillStyle = "red";
   enemies.forEach((enemy) => {
     ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
   });
-  
+
   ctx.fillStyle = "yellow";
   player.bullets.forEach((bullet) => {
-    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+    ctx.fill();
   });
 
-  ctx.fillStyle = "white";
+  ctx.fillStyle = "red";
   enemyBullets.forEach((bullet) => {
-    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+    ctx.fill();
   });
-
-  if (gameOver) {
-    ctx.fillStyle = "white";
-    ctx.font = "30px Arial";
-    ctx.fillText("GAME OVER", canvas.width / 2 - 80, canvas.height / 2);
-  }
 }
 
 function gameLoop() {
