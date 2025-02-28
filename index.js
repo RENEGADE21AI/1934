@@ -73,7 +73,7 @@ function update() {
   if (keys["ArrowDown"] && player.y < canvas.height - player.height) player.y += player.speed;
 
   if (keys["Space"] && player.lastShot >= player.fireRate) {
-    player.bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 10, speedY: -7 });
+    player.bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 6, height: 15, speedY: -7 });
     player.lastShot = 0;
   }
   player.lastShot++;
@@ -86,6 +86,14 @@ function update() {
   spawnEnemies();
 
   enemies.forEach((enemy, enemyIndex) => {
+    if (enemy.pattern === "zigzag") {
+      enemy.x += enemy.direction * 2;
+      if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) enemy.direction *= -1;
+    }
+    if (enemy.pattern === "follow") {
+      if (enemy.x < player.x) enemy.x += 1;
+      else if (enemy.x > player.x) enemy.x -= 1;
+    }
     enemy.y += enemy.speed;
     
     player.bullets.forEach((bullet, bulletIndex) => {
