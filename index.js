@@ -63,7 +63,7 @@ function update() {
   if (keys["ArrowDown"] && player.y < canvas.height - player.height) player.y += player.speed;
 
   if (keys["Space"] && player.lastShot >= player.fireRate) {
-    player.bullets.push({ x: player.x + player.width / 2, y: player.y, radius: 5, speedY: -7 });
+    player.bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 10, speedY: -7 });
     player.lastShot = 0;
   }
   player.lastShot++;
@@ -73,18 +73,17 @@ function update() {
     if (bullet.y < 0) player.bullets.splice(index, 1);
   });
 
-  enemySpawnTimer++;
-  if (enemySpawnTimer % 150 === 0) {
-    let typeIndex = Math.floor(Math.random() * enemyTypes.length);
-    let type = enemyTypes[typeIndex];
-    let waveSize = 3 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < waveSize; i++) {
-      enemies.push({ x: 50 + i * 150, y: -type.height, ...type, health: type.health || 1 });
-    }
-  }
-
-  enemies.forEach((enemy) => {
+  enemies.forEach((enemy, enemyIndex) => {
     enemy.y += enemy.speed;
+    
+    player.bullets.forEach((bullet, bulletIndex) => {
+      if (checkCollision(bullet, enemy)) {
+        enemy.health -= 1;
+        player.bullets.splice(bulletIndex, 1);
+        if (enemy.health <= 0) enemies.splice(enemyIndex, 1);
+      }
+    });
+
     if (Math.random() < enemy.shootChance) {
       let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
       enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 7, speedX: Math.cos(angle) * 2, speedY: Math.sin(angle) * 2, color: "red" });
@@ -123,9 +122,7 @@ function draw() {
 
   ctx.fillStyle = "yellow";
   player.bullets.forEach((bullet) => {
-    ctx.beginPath();
-    ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
 
   enemyBullets.forEach((bullet) => {
