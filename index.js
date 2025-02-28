@@ -46,6 +46,16 @@ function checkCollision(rect1, rect2) {
   );
 }
 
+function spawnEnemies() {
+  if (enemySpawnTimer % 120 === 0) { 
+    let typeIndex = Math.floor(Math.random() * enemyTypes.length);
+    let type = enemyTypes[typeIndex];
+    let startX = Math.random() * (canvas.width - type.width);
+    enemies.push({ x: startX, y: -type.height, ...type });
+  }
+  enemySpawnTimer++;
+}
+
 function update() {
   if (gameOver) return;
   
@@ -72,6 +82,8 @@ function update() {
     bullet.y += bullet.speedY;
     if (bullet.y < 0) player.bullets.splice(index, 1);
   });
+
+  spawnEnemies();
 
   enemies.forEach((enemy, enemyIndex) => {
     enemy.y += enemy.speed;
