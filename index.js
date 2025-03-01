@@ -40,20 +40,20 @@ document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 function checkCollision(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
-    rect1.x + rect1.width > rect2.x &&
+    rect1.x + rect2.width > rect2.x &&
     rect1.y < rect2.y + rect2.height &&
     rect1.y + rect1.height > rect2.y
   );
 }
 
-function spawnEnemies() {
-  if (enemySpawnTimer % 120 === 0) { 
-    let typeIndex = Math.floor(Math.random() * enemyTypes.length);
-    let type = enemyTypes[typeIndex];
-    let startX = Math.random() * (canvas.width - type.width);
+function spawnEnemyWave() {
+  let waveType = Math.floor(Math.random() * enemyTypes.length);
+  let enemyGroupSize = Math.floor(Math.random() * 4) + 2; // Spawns 2-5 enemies per wave
+  for (let i = 0; i < enemyGroupSize; i++) {
+    let type = enemyTypes[waveType];
+    let startX = (canvas.width / enemyGroupSize) * i + Math.random() * 20;
     enemies.push({ x: startX, y: -type.height, ...type });
   }
-  enemySpawnTimer++;
 }
 
 function update() {
@@ -73,7 +73,7 @@ function update() {
   if (keys["ArrowDown"] && player.y < canvas.height - player.height) player.y += player.speed;
 
   if (keys["Space"] && player.lastShot >= player.fireRate) {
-    player.bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 6, height: 15, speedY: -7 });
+    player.bullets.push({ x: player.x + player.width / 2 - 3, y: player.y, width: 6, height: 15, speedY: -7 });
     player.lastShot = 0;
   }
   player.lastShot++;
@@ -83,7 +83,10 @@ function update() {
     if (bullet.y < 0) player.bullets.splice(index, 1);
   });
 
-  spawnEnemies();
+  if (enemySpawnTimer % 180 === 0) {
+    spawnEnemyWave();
+  }
+  enemySpawnTimer++;
 
   enemies.forEach((enemy, enemyIndex) => {
     if (enemy.pattern === "zigzag") {
@@ -103,20 +106,6 @@ function update() {
         if (enemy.health <= 0) enemies.splice(enemyIndex, 1);
       }
     });
-
-    if (Math.random() < enemy.shootChance) {
-      let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 7, speedX: Math.cos(angle) * 2, speedY: Math.sin(angle) * 2, color: "red" });
-    }
-  });
-
-  enemyBullets.forEach((bullet, index) => {
-    bullet.x += bullet.speedX;
-    bullet.y += bullet.speedY;
-    if (checkCollision({ x: bullet.x - bullet.radius, y: bullet.y - bullet.radius, width: bullet.radius * 2, height: bullet.radius * 2 }, player)) {
-      player.health -= 1;
-      enemyBullets.splice(index, 1);
-    }
   });
 }
 
@@ -135,21 +124,9 @@ function draw() {
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x, player.y, player.width, player.height);
 
-  ctx.fillStyle = "red";
   enemies.forEach((enemy) => {
+    ctx.fillStyle = enemy.color;
     ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-  });
-
-  ctx.fillStyle = "yellow";
-  player.bullets.forEach((bullet) => {
-    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-  });
-
-  enemyBullets.forEach((bullet) => {
-    ctx.fillStyle = bullet.color;
-    ctx.beginPath();
-    ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
-    ctx.fill();
   });
 }
 
