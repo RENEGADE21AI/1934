@@ -40,7 +40,7 @@ document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 function checkCollision(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
-    rect1.x + rect1.width > rect2.x &&
+    rect1.x + rect2.width > rect2.x &&
     rect1.y < rect2.y + rect2.height &&
     rect1.y + rect1.height > rect2.y
   );
@@ -100,7 +100,7 @@ function update() {
     enemy.y += enemy.speed;
     
     if (Math.random() < enemy.shootChance) {
-      enemyBullets.push({ x: enemy.x + enemy.width / 2 - 3, y: enemy.y + enemy.height, width: 6, height: 6, speedY: 3, color: "red" });
+      enemyBullets.push({ x: enemy.x + enemy.width / 2 - 5, y: enemy.y + enemy.height, width: 10, height: 10, speedY: 3, color: "red" });
     }
     
     player.bullets.forEach((bullet, bulletIndex) => {
@@ -137,6 +137,9 @@ function draw() {
     ctx.fillStyle = bullet.color;
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
     bullet.y += bullet.speedY;
+    if (checkCollision(bullet, player)) {
+      player.health -= 1;
+    }
   });
 
   enemies.forEach((enemy) => {
