@@ -73,7 +73,7 @@ function update() {
   if (keys["ArrowDown"] && player.y < canvas.height - player.height) player.y += player.speed;
 
   if (keys["Space"] && player.lastShot >= player.fireRate) {
-    player.bullets.push({ x: player.x + player.width / 2 - 3, y: player.y, width: 6, height: 15, speedY: -7 });
+    player.bullets.push({ x: player.x + player.width / 2 - 3, y: player.y, width: 6, height: 15, speedY: -7, color: "yellow" });
     player.lastShot = 0;
   }
   player.lastShot++;
@@ -123,6 +123,11 @@ function draw() {
 
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  player.bullets.forEach((bullet) => {
+    ctx.fillStyle = bullet.color;
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
 
   enemies.forEach((enemy) => {
     ctx.fillStyle = enemy.color;
