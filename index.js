@@ -100,7 +100,7 @@ function update() {
     enemy.y += enemy.speed;
     
     if (Math.random() < enemy.shootChance) {
-      enemyBullets.push({ x: enemy.x + enemy.width / 2 - 5, y: enemy.y + enemy.height, width: 10, height: 10, speedY: 3, color: "red" });
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 5, speedY: 3, color: "red" });
     }
     
     player.bullets.forEach((bullet, bulletIndex) => {
@@ -136,7 +136,7 @@ function draw() {
   enemyBullets.forEach((bullet, index) => {
     ctx.fillStyle = bullet.color;
     ctx.beginPath();
-    ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+    ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
     ctx.fill();
     bullet.y += bullet.speedY;
     if (checkCollision(bullet, player)) {
@@ -151,4 +151,9 @@ function draw() {
   });
 }
 
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
 gameLoop();
