@@ -40,7 +40,7 @@ document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 function checkCollision(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
-    rect1.x + rect2.width > rect2.x &&
+    rect1.x + rect1.width > rect2.x &&
     rect1.y < rect2.y + rect2.height &&
     rect1.y + rect1.height > rect2.y
   );
@@ -48,7 +48,7 @@ function checkCollision(rect1, rect2) {
 
 function spawnEnemyWave() {
   let waveType = Math.floor(Math.random() * enemyTypes.length);
-  let enemyGroupSize = Math.floor(Math.random() * 4) + 2; // Spawns 2-5 enemies per wave
+  let enemyGroupSize = Math.floor(Math.random() * 4) + 2;
   for (let i = 0; i < enemyGroupSize; i++) {
     let type = enemyTypes[waveType];
     let startX = (canvas.width / enemyGroupSize) * i + Math.random() * 20;
@@ -133,12 +133,15 @@ function draw() {
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
 
-  enemyBullets.forEach((bullet) => {
+  enemyBullets.forEach((bullet, index) => {
     ctx.fillStyle = bullet.color;
-    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+    ctx.fill();
     bullet.y += bullet.speedY;
     if (checkCollision(bullet, player)) {
       player.health -= 1;
+      enemyBullets.splice(index, 1);
     }
   });
 
@@ -146,12 +149,6 @@ function draw() {
     ctx.fillStyle = enemy.color;
     ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
   });
-}
-
-function gameLoop() {
-  update();
-  draw();
-  requestAnimationFrame(gameLoop);
 }
 
 gameLoop();
