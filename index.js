@@ -100,7 +100,7 @@ function update() {
     enemy.y += enemy.speed;
     
     if (Math.random() < enemy.shootChance) {
-      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 5, speedY: 3, color: "red" });
+      enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 7, speedY: 3, color: "red" });
     }
     
     player.bullets.forEach((bullet, bulletIndex) => {
