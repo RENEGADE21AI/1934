@@ -37,6 +37,21 @@ const enemyTypes = [
 document.addEventListener("keydown", (e) => { keys[e.code] = true; });
 document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
+function checkCollisionCircleRect(circle, rect) {
+  const distX = Math.abs(circle.x - rect.x - rect.width / 2);
+  const distY = Math.abs(circle.y - rect.y - rect.height / 2);
+
+  if (distX > (rect.width / 2 + circle.radius)) { return false; }
+  if (distY > (rect.height / 2 + circle.radius)) { return false; }
+
+  if (distX <= (rect.width / 2)) { return true; }
+  if (distY <= (rect.height / 2)) { return true; }
+
+  const dx = distX - rect.width / 2;
+  const dy = distY - rect.height / 2;
+  return (dx * dx + dy * dy <= (circle.radius * circle.radius));
+}
+
 function checkCollision(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
@@ -58,7 +73,7 @@ function spawnEnemyWave() {
 
 function update() {
   if (gameOver) return;
-  
+
   if (player.health <= 0) {
     gameOver = true;
     return;
@@ -98,11 +113,11 @@ function update() {
       else if (enemy.x > player.x) enemy.x -= 1;
     }
     enemy.y += enemy.speed;
-    
+
     if (Math.random() < enemy.shootChance) {
       enemyBullets.push({ x: enemy.x + enemy.width / 2, y: enemy.y + enemy.height, radius: 7, speedY: 3, color: "red" });
     }
-    
+
     player.bullets.forEach((bullet, bulletIndex) => {
       if (checkCollision(bullet, enemy)) {
         enemy.health -= 1;
@@ -110,6 +125,16 @@ function update() {
         if (enemy.health <= 0) enemies.splice(enemyIndex, 1);
       }
     });
+  });
+
+  enemyBullets.forEach((bullet, index) => {
+    bullet.y += bullet.speedY;
+    if (checkCollisionCircleRect(bullet, player)) {
+      player.health -= 1;
+      enemyBullets.splice(index, 1);
+    } else if (bullet.y > canvas.height) {
+      enemyBullets.splice(index, 1);
+    }
   });
 }
 
@@ -133,16 +158,11 @@ function draw() {
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
 
-  enemyBullets.forEach((bullet, index) => {
+  enemyBullets.forEach((bullet) => {
     ctx.fillStyle = bullet.color;
     ctx.beginPath();
     ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
     ctx.fill();
-    bullet.y += bullet.speedY;
-    if (checkCollision(bullet, player)) {
-      player.health -= 1;
-      enemyBullets.splice(index, 1);
-    }
   });
 
   enemies.forEach((enemy) => {
