@@ -4,7 +4,6 @@ document.body.appendChild(canvas);
 canvas.width = 800;
 canvas.height = 600;
 
-// Player object
 const player = {
   x: canvas.width / 2 - 25,
   y: canvas.height - 100,
@@ -104,13 +103,21 @@ function update() {
   enemySpawnTimer++;
 
   enemies.forEach((enemy, enemyIndex) => {
-    if (enemy.pattern === "zigzag") {
-      enemy.x += enemy.direction * 2;
-      if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) enemy.direction *= -1;
-    }
-    if (enemy.pattern === "follow") {
-      if (enemy.x < player.x) enemy.x += 1;
-      else if (enemy.x > player.x) enemy.x -= 1;
+    switch (enemy.pattern) {
+      case "zigzag":
+        enemy.x += enemy.direction * 2;
+        if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) enemy.direction *= -1;
+        break;
+      case "follow":
+        enemy.x += enemy.x < player.x ? 1 : -1;
+        break;
+      case "dive":
+        enemy.y += enemy.speed * 1.5;
+        enemy.x += Math.sin(enemy.y / 50) * 3;
+        break;
+      case "boss":
+        enemy.x += Math.cos(enemy.y / 30) * 1.5;
+        break;
     }
     enemy.y += enemy.speed;
 
