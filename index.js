@@ -92,10 +92,14 @@ function update() {
   }
   player.lastShot++;
 
-  player.bullets.forEach((bullet, index) => {
-    bullet.y += bullet.speedY;
-    if (bullet.y < 0) player.bullets.splice(index, 1);
-  });
+  if (keys["KeyB"] && player.bombCount > 0) {
+    enemies.length = 0;
+    enemyBullets.length = 0;
+    player.bombCount--;
+  }
+
+  player.bullets = player.bullets.filter(bullet => bullet.y > 0);
+  player.bullets.forEach(bullet => bullet.y += bullet.speedY);
 
   if (enemySpawnTimer % 180 === 0) {
     spawnEnemyWave();
@@ -160,22 +164,27 @@ function draw() {
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x, player.y, player.width, player.height);
 
-  player.bullets.forEach((bullet) => {
+  player.bullets.forEach(bullet => {
     ctx.fillStyle = bullet.color;
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
 
-  enemyBullets.forEach((bullet) => {
+  enemyBullets.forEach(bullet => {
     ctx.fillStyle = bullet.color;
     ctx.beginPath();
     ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
     ctx.fill();
   });
 
-  enemies.forEach((enemy) => {
+  enemies.forEach(enemy => {
     ctx.fillStyle = enemy.color;
     ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
   });
+
+  ctx.fillStyle = "black";
+  ctx.font = "20px Arial";
+  ctx.fillText(`Health: ${player.health}`, 10, 20);
+  ctx.fillText(`Bombs: ${player.bombCount}`, 10, 50);
 }
 
 function gameLoop() {
